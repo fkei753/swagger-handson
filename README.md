@@ -92,15 +92,31 @@ element.textContent = task.title;     // 画面のタスク名が空欄になる
 OpenAPI 仕様から生成した TypeScript 型を使うと、**コーディング中**にバグを検知できます。
 
 ```typescript
+//                ↓ 大文字 Task：型・クラス名（設計図）
 import type { Task } from "@/generated/api/models/Task";  // 自動生成された型
 
+//       ↓ 小文字 task：変数名（設計図から作られた実際のデータ）
 const task: Task = await TasksService.getTask(1);
 
 task.tittle;             // ❌ コンパイルエラー（タイポを即検知）
 task.status = "YOLO";   // ❌ コンパイルエラー（許可されていない値）
 task.title;              // ✅ OK
+
+// Task.status.TODO の読み方：
+//  Task        = 型名（namespace として enum を持つ）
+//       .status = Task 型の中の enum 名
+//              .TODO = その enum の値
 task.status = Task.status.TODO;  // ✅ OK（enum で安全に指定）
 ```
+
+> 💡 **大文字 `Task` と小文字 `task` の違い**
+>
+> | | 役割 | たとえるなら |
+> |--|------|------------|
+> | `Task`（大文字） | 型・クラス名。データの「設計図」 | クッキーの型（かた） |
+> | `task`（小文字） | 変数名。設計図から作られた「実際のデータ」 | 型から抜いた実際のクッキー |
+>
+> `Task.status.TODO` は「`Task` という設計図が持つ `status` という enum の中の `TODO` という値」を意味します。`task.status` に直接 `"YOLO"` のような文字列を入れると `Task.status` に定義されていない値なのでコンパイルエラーになります。
 
 | | 型安全なし | 型安全あり |
 |--|-----------|----------|
@@ -741,6 +757,3 @@ kill -9 <PID>
 
 ---
 
-## 📝 ライセンス
-
-MIT License
