@@ -476,7 +476,7 @@ touch src/app/type-check-test.ts
 import { TasksService } from "@/generated/api/services/TasksService";
 
 async function test() {
-  const task = await TasksService.getTask(1);
+  const task = await TasksService.getTaskById(1);
 
   console.log(task.dueDate);   // ✅ OK（型が保証されている）
   console.log(task.dueDat);    // ❌ タイポ（わざと間違えている）
