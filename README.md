@@ -102,22 +102,8 @@ task.tittle;             // ❌ コンパイルエラー（タイポを即検知
 task.status = "YOLO";   // ❌ コンパイルエラー（許可されていない値）
 task.title;              // ✅ OK
 
-// Task.status.TODO の読み方：
-//  Task        = 型名（namespace として enum を持つ）
-//       .status = Task 型の中の enum 名
-//              .TODO = その enum の値
 task.status = Task.status.TODO;  // ✅ OK（enum で安全に指定）
 ```
-
-> 💡 **大文字 `Task` と小文字 `task` の違い**
->
-> | | 役割 | たとえるなら |
-> |--|------|------------|
-> | `Task`（大文字） | 型・クラス名。データの「設計図」 | クッキーの型（かた） |
-> | `task`（小文字） | 変数名。設計図から作られた「実際のデータ」 | 型から抜いた実際のクッキー |
->
-> `Task.status.TODO` は「`Task` という設計図が持つ `status` という enum の中の `TODO` という値」を意味します。`task.status` に直接 `"YOLO"` のような文字列を入れると `Task.status` に定義されていない値なのでコンパイルエラーになります。
-
 | | 型安全なし | 型安全あり |
 |--|-----------|----------|
 | バグ発見タイミング | 実行時・テスト・本番 | コーディング中（即座） |
@@ -472,15 +458,59 @@ export type Task = {
 };
 ```
 
-**⑤ Frontend で `dueDate` を型安全に使う**
+**⑤ Frontend で型エラーを実際に確認する**
+
+型エラーは **IDE の赤波線** または **TypeScript コンパイラ** で確認します。
+
+**手順 1: 検証用ファイルを作成する**
+
+```bash
+# frontend ディレクトリで実行
+touch src/app/type-check-test.ts
+```
+
+**手順 2: 以下のコードを貼り付けて保存する**
 
 ```typescript
-const task = await TasksService.getTask(1);
+// frontend/src/app/type-check-test.ts
+import { TasksService } from "@/generated/api/services/TasksService";
 
-console.log(task.dueDate);   // ✅ OK（型が保証されている）
-console.log(task.dueDat);    // ❌ コンパイルエラー（タイポを即検知）
-console.log(task.due_date);  // ❌ コンパイルエラー（フィールド名が違う）
+async function test() {
+  const task = await TasksService.getTask(1);
+
+  console.log(task.dueDate);   // ✅ OK（型が保証されている）
+  console.log(task.dueDat);    // ❌ タイポ（わざと間違えている）
+  console.log(task.due_date);  // ❌ スネークケース（わざと間違えている）
+}
 ```
+
+**手順 3: TypeScript コンパイラでチェックを実行する**
+
+```bash
+cd frontend
+npx tsc --noEmit
+```
+
+**期待される出力（エラーが 2 件表示される）**
+
+```
+src/app/type-check-test.ts:7:20 - error TS2339: Property 'dueDat' does not exist on type 'Task'.
+src/app/type-check-test.ts:8:20 - error TS2339: Property 'due_date' does not exist on type 'Task'.
+
+Found 2 errors.
+```
+
+`task.dueDate` だけエラーが出ず、タイポ・誤ったフィールド名はコンパイルエラーになることを確認してください。
+
+**手順 4: 検証用ファイルを削除する**
+
+```bash
+rm src/app/type-check-test.ts
+```
+
+> 💡 **IDE（VS Code / IntelliJ）を使っている場合**  
+> ファイルを保存した時点でエラー箇所に赤波線が表示されます。  
+> 赤波線が出ない場合は `Ctrl+Shift+P` → `TypeScript: Restart TS Server` を実行してください。
 
 ### まとめ：変更がどう伝わるか
 
